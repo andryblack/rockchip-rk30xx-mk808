@@ -69,13 +69,14 @@ static struct bt_sock_list hci_sk_list = {
 void hci_send_to_sock(struct hci_dev *hdev, struct sk_buff *skb)
 {
 	struct sock *sk;
+    struct hlist_node *node;
 	struct sk_buff *skb_copy = NULL;
 
 	BT_DBG("hdev %p len %d", hdev, skb->len);
 
 	read_lock(&hci_sk_list.lock);
 
-	sk_for_each(sk, &hci_sk_list.head) {
+	sk_for_each(sk, node, &hci_sk_list.head) {
 		struct hci_filter *flt;
 		struct sk_buff *nskb;
 
@@ -140,12 +141,13 @@ void hci_send_to_sock(struct hci_dev *hdev, struct sk_buff *skb)
 void hci_send_to_control(struct sk_buff *skb, struct sock *skip_sk)
 {
 	struct sock *sk;
+    struct hlist_node *node;
 
 	BT_DBG("len %d", skb->len);
 
 	read_lock(&hci_sk_list.lock);
 
-	sk_for_each(sk, &hci_sk_list.head) {
+	sk_for_each(sk, node, &hci_sk_list.head) {
 		struct sk_buff *nskb;
 
 		/* Skip the original socket */
@@ -173,6 +175,7 @@ void hci_send_to_control(struct sk_buff *skb, struct sock *skip_sk)
 void hci_send_to_monitor(struct hci_dev *hdev, struct sk_buff *skb)
 {
 	struct sock *sk;
+    struct hlist_node *node;
 	struct sk_buff *skb_copy = NULL;
 	__le16 opcode;
 
@@ -206,7 +209,7 @@ void hci_send_to_monitor(struct hci_dev *hdev, struct sk_buff *skb)
 
 	read_lock(&hci_sk_list.lock);
 
-	sk_for_each(sk, &hci_sk_list.head) {
+	sk_for_each(sk, node, &hci_sk_list.head) {
 		struct sk_buff *nskb;
 
 		if (sk->sk_state != BT_BOUND)
@@ -247,12 +250,13 @@ void hci_send_to_monitor(struct hci_dev *hdev, struct sk_buff *skb)
 static void send_monitor_event(struct sk_buff *skb)
 {
 	struct sock *sk;
+    struct hlist_node *node;
 
 	BT_DBG("len %d", skb->len);
 
 	read_lock(&hci_sk_list.lock);
 
-	sk_for_each(sk, &hci_sk_list.head) {
+	sk_for_each(sk, node, &hci_sk_list.head) {
 		struct sk_buff *nskb;
 
 		if (sk->sk_state != BT_BOUND)
@@ -367,7 +371,7 @@ static void hci_si_event(struct hci_dev *hdev, int type, int dlen, void *data)
 void hci_sock_dev_event(struct hci_dev *hdev, int event)
 {
 	struct hci_ev_si_device ev;
-
+    
 	BT_DBG("hdev %s event %d", hdev->name, event);
 
 	/* Send event to monitor */
@@ -388,10 +392,11 @@ void hci_sock_dev_event(struct hci_dev *hdev, int event)
 
 	if (event == HCI_DEV_UNREG) {
 		struct sock *sk;
+        struct hlist_node *node;
 
 		/* Detach sockets from device */
 		read_lock(&hci_sk_list.lock);
-		sk_for_each(sk, &hci_sk_list.head) {
+		sk_for_each(sk, node, &hci_sk_list.head) {
 			bh_lock_sock_nested(sk);
 			if (hci_pi(sk)->hdev == hdev) {
 				hci_pi(sk)->hdev = NULL;
