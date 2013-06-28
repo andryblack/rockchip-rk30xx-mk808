@@ -1,6 +1,7 @@
 #
 # Makefile for the Linux Bluetooth subsystem.
 #
+EXTRACFLAGS+=-fno-pic
 
 obj-$(CONFIG_BT)	+= bluetooth.o
 obj-$(CONFIG_BT_RFCOMM)	+= rfcomm/

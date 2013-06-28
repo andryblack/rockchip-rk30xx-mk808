@@ -16,7 +16,7 @@
 #include <linux/platform_device.h>
 #include <linux/slab.h>
 #include <asm/uaccess.h>
-
+#include "../mtd/rknand/rknand_base.h"
 #if 0
 #define DBG(x...)   printk("vFlash:" x)
 #else
@@ -31,6 +31,7 @@ static struct miscdevice vflash_miscdev;
 
 #define READ_BDADDR_FROM_FLASH  0x01
 
+#define CONFIG_WIFI_MAC
 extern char GetSNSectorInfo(char * pbuf);
 extern unsigned char wlan_mac_addr[6];
 
