@@ -25,7 +25,6 @@
 
 /* Bluetooth HCI core. */
 
-#include <linux/export.h>
 #include <linux/idr.h>
 
 #include <linux/rfkill.h>
