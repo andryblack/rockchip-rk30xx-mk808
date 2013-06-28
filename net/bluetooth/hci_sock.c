@@ -39,6 +39,129 @@ static inline int hci_test_bit(int nr, void *addr)
 	return *((__u32 *) addr + (nr >> 5)) & ((__u32) 1 << (nr & 31));
 }
 
+static void skb_clone_fraglist(struct sk_buff *skb)
+{
+	struct sk_buff *list;
+    
+	skb_walk_frags(skb, list)
+    skb_get(list);
+}
+
+static void __copy_skb_header(struct sk_buff *new, const struct sk_buff *old)
+{
+	new->tstamp		= old->tstamp;
+	new->dev		= old->dev;
+	new->transport_header	= old->transport_header;
+	new->network_header	= old->network_header;
+	new->mac_header		= old->mac_header;
+	new->inner_transport_header = old->inner_transport_header;
+	new->inner_network_header = old->inner_network_header;
+	new->inner_mac_header = old->inner_mac_header;
+	skb_dst_copy(new, old);
+	new->rxhash		= old->rxhash;
+	new->ooo_okay		= old->ooo_okay;
+	new->l4_rxhash		= old->l4_rxhash;
+	new->no_fcs		= old->no_fcs;
+	new->encapsulation	= old->encapsulation;
+#ifdef CONFIG_XFRM
+	new->sp			= secpath_get(old->sp);
+#endif
+	memcpy(new->cb, old->cb, sizeof(old->cb));
+	new->csum		= old->csum;
+	new->local_df		= old->local_df;
+	new->pkt_type		= old->pkt_type;
+	new->ip_summed		= old->ip_summed;
+	skb_copy_queue_mapping(new, old);
+	new->priority		= old->priority;
+#if IS_ENABLED(CONFIG_IP_VS)
+	new->ipvs_property	= old->ipvs_property;
+#endif
+	new->pfmemalloc		= old->pfmemalloc;
+	new->protocol		= old->protocol;
+	new->mark		= old->mark;
+	new->skb_iif		= old->skb_iif;
+	__nf_copy(new, old);
+#if IS_ENABLED(CONFIG_NETFILTER_XT_TARGET_TRACE)
+	new->nf_trace		= old->nf_trace;
+#endif
+#ifdef CONFIG_NET_SCHED
+	new->tc_index		= old->tc_index;
+#ifdef CONFIG_NET_CLS_ACT
+	new->tc_verd		= old->tc_verd;
+#endif
+#endif
+	new->vlan_proto		= old->vlan_proto;
+	new->vlan_tci		= old->vlan_tci;
+    
+	skb_copy_secmark(new, old);
+}
+
+
+static void copy_skb_header(struct sk_buff *new, const struct sk_buff *old)
+{
+#ifndef NET_SKBUFF_DATA_USES_OFFSET
+	/*
+	 *	Shift between the two data areas in bytes
+	 */
+	unsigned long offset = new->data - old->data;
+#endif
+    
+	__copy_skb_header(new, old);
+    
+#ifndef NET_SKBUFF_DATA_USES_OFFSET
+	skb_headers_offset_update(new, offset);
+#endif
+	skb_shinfo(new)->gso_size = skb_shinfo(old)->gso_size;
+	skb_shinfo(new)->gso_segs = skb_shinfo(old)->gso_segs;
+	skb_shinfo(new)->gso_type = skb_shinfo(old)->gso_type;
+}
+
+/**
+ * __skb_frag_ref - take an addition reference on a paged fragment.
+ * @frag: the paged fragment
+ *
+ * Takes an additional reference on the paged fragment @frag.
+ */
+static inline void __skb_frag_ref(skb_frag_t *frag)
+{
+	get_page(skb_frag_page(frag));
+}
+
+/**
+ * skb_frag_ref - take an addition reference on a paged fragment of an skb.
+ * @skb: the buffer
+ * @f: the fragment offset.
+ *
+ * Takes an additional reference on the @f'th paged fragment of @skb.
+ */
+static inline void skb_frag_ref(struct sk_buff *skb, int f)
+{
+	__skb_frag_ref(&skb_shinfo(skb)->frags[f]);
+}
+
+
+/**
+ *	skb_orphan_frags - orphan the frags contained in a buffer
+ *	@skb: buffer to orphan frags from
+ *	@gfp_mask: allocation mask for replacement pages
+ *
+ *	For each frag in the SKB which needs a destructor (i.e. has an
+ *	owner) create a copy of that frag and release the original
+ *	page by calling the destructor.
+ */
+static inline int skb_orphan_frags(struct sk_buff *skb, gfp_t gfp_mask)
+{
+	if (likely(!(skb_shinfo(skb)->tx_flags & SKBTX_DEV_ZEROCOPY)))
+		return 0;
+	return skb_copy_ubufs(skb, gfp_mask);
+}
+
+static inline int skb_alloc_rx_flag(const struct sk_buff *skb)
+{
+	if (skb_pfmemalloc(skb))
+		return SKB_ALLOC_RX;
+	return 0;
+}
 
 /**
  *	__pskb_copy	-	create copy of an sk_buff with private head.
