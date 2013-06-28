@@ -24,8 +24,6 @@
 
 /* Bluetooth HCI connection handling. */
 
-#include <linux/export.h>
-
 #include <net/bluetooth/bluetooth.h>
 #include <net/bluetooth/hci_core.h>
 #include <net/bluetooth/a2mp.h>
