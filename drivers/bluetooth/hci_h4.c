@@ -62,7 +62,6 @@ struct h4_struct {
 #define H4_W4_SCO_HDR		3
 #define H4_W4_DATA		4
 
-
 /* Initialize protocol */
 static int h4_open(struct hci_uart *hu)
 {
@@ -70,7 +69,7 @@ static int h4_open(struct hci_uart *hu)
 
 	BT_DBG("hu %p", hu);
 
-	h4 = kzalloc(sizeof(*h4), GFP_ATOMIC);
+	h4 = kzalloc(sizeof(*h4), GFP_KERNEL);
 	if (!h4)
 		return -ENOMEM;
 
@@ -127,7 +126,7 @@ static int h4_enqueue(struct hci_uart *hu, struct sk_buff *skb)
 
 static inline int h4_check_data_len(struct h4_struct *h4, int len)
 {
-	register int room = skb_tailroom(h4->rx_skb);
+	int room = skb_tailroom(h4->rx_skb);
 
 	BT_DBG("len %d room %d", len, room);
 
@@ -141,6 +140,7 @@ static inline int h4_check_data_len(struct h4_struct *h4, int len)
 		h4->rx_count = len;
 		return len;
 	}
+
 	h4->rx_state = H4_W4_PACKET_TYPE;
 	h4->rx_skb   = NULL;
 	h4->rx_count = 0;
@@ -152,6 +152,9 @@ static inline int h4_check_data_len(struct h4_struct *h4, int len)
 static int h4_recv(struct hci_uart *hu, void *data, int count)
 {
 	int ret;
+
+	if (!test_bit(HCI_UART_REGISTERED, &hu->flags))
+		return -EUNATCH;
 
 	ret = hci_recv_stream_fragment(hu->hdev, data, count);
 	if (ret < 0) {
