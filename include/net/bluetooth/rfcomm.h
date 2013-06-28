@@ -158,7 +158,6 @@ struct rfcomm_session {
 	struct timer_list timer;
 	unsigned long    state;
 	unsigned long    flags;
-	atomic_t         refcnt;
 	int              initiator;
 
 	/* Default DLC parameters */
@@ -211,6 +210,7 @@ struct rfcomm_dlc {
 #define RFCOMM_AUTH_ACCEPT  6
 #define RFCOMM_AUTH_REJECT  7
 #define RFCOMM_DEFER_SETUP  8
+#define RFCOMM_ENC_DROP     9
 
 /* Scheduling flags and events */
 #define RFCOMM_SCHED_WAKEUP 31
@@ -274,11 +274,6 @@ static inline void rfcomm_dlc_unthrottle(struct rfcomm_dlc *d)
 /* ---- RFCOMM sessions ---- */
 void   rfcomm_session_getaddr(struct rfcomm_session *s, bdaddr_t *src,
 								bdaddr_t *dst);
-
-static inline void rfcomm_session_hold(struct rfcomm_session *s)
-{
-	atomic_inc(&s->refcnt);
-}
 
 /* ---- RFCOMM sockets ---- */
 struct sockaddr_rc {
