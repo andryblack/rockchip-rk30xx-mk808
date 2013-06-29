@@ -767,13 +767,7 @@ static int hidp_setup_hid(struct hidp_session *session,
 	hid->hid_get_raw_report = hidp_get_raw_report;
 	hid->hid_output_raw_report = hidp_output_raw_report;
 
-	/* True if device is blacklisted in drivers/hid/hid-core.c */
-	if (hid_ignore(hid)) {
-		hid_destroy_device(session->hid);
-		session->hid = NULL;
-		return -ENODEV;
-	}
-
+	
 	return 0;
 
 fault:
