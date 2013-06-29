@@ -26,8 +26,6 @@
 
 #define pr_fmt(fmt) "Bluetooth: " fmt
 
-#include <linux/export.h>
-
 #include <net/bluetooth/bluetooth.h>
 
 void baswap(bdaddr_t *dst, bdaddr_t *src)
