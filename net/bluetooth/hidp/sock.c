@@ -20,7 +20,6 @@
    SOFTWARE IS DISCLAIMED.
 */
 
-#include <linux/export.h>
 #include <linux/file.h>
 
 #include "hidp.h"
