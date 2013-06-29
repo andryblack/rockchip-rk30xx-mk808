@@ -35,6 +35,10 @@
 
 #define BNEP_TX_QUEUE_LEN 20
 
+#define ETH_P_802_3_MIN	0x0600		/* If the value in the ethernet type is less than this value
+                                     * then the frame is Ethernet II. Else it is 802.3 */
+
+
 static int bnep_net_open(struct net_device *dev)
 {
 	netif_start_queue(dev);
