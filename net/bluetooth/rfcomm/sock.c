@@ -25,7 +25,6 @@
  * RFCOMM sockets.
  */
 
-#include <linux/export.h>
 #include <linux/debugfs.h>
 
 #include <net/bluetooth/bluetooth.h>
