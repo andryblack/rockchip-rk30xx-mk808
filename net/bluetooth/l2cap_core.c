@@ -40,6 +40,9 @@
 #include <net/bluetooth/a2mp.h>
 #include <net/bluetooth/amp.h>
 
+#define DIV_ROUND_UP_ULL(ll,d) \
+    ({ unsigned long long _tmp = (ll)+(d)-1; do_div(_tmp, d); _tmp; })
+
 bool disable_ertm;
 
 static u32 l2cap_feat_mask = L2CAP_FEAT_FIXED_CHAN;
