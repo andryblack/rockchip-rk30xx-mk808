@@ -1564,7 +1564,6 @@ struct sockaddr_hci {
 #define HCI_DEV_NONE	0xffff
 
 #define HCI_CHANNEL_RAW		0
-#define HCI_CHANNEL_MONITOR	2
 #define HCI_CHANNEL_CONTROL	3
 
 struct hci_filter {
